@@ -34,7 +34,7 @@
       src="https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/50/cb/cd/50cbcd7a-4372-65f7-9676-5a77efe35f41/AppIcon-0-0-1x_U007emarketing-0-11-0-85-220.png/460x0w.webp"
       alt="Sahi App Logo"
     />
-    <p id="statusText">Opening Sahi ...</p>
+    <p id="statusText">Opening Sahi...</p>
 
     <script>
       function openApp() {
@@ -55,7 +55,7 @@
 
         // Redirect desktop users to website
         if (isDesktop) {
-          statusText.innerText = "Redirecting to Sahi.com ...";
+          statusText.innerText = "Redirecting to Sahi.com...";
           window.location.replace(desktopFallbackURL);
           return;
         }
@@ -63,26 +63,37 @@
         var now = new Date().getTime();
         var appOpened = false;
 
-        // Detect if user switches away (meaning the app was opened)
-        document.addEventListener("visibilitychange", function () {
-          if (document.hidden) {
-            appOpened = true;
-          }
-        });
+        // Detect if the app is opened via `visibilitychange` or `pagehide`
+        function detectAppOpen() {
+          appOpened = true;
+        }
 
-        // Try opening the app
+        document.addEventListener("visibilitychange", detectAppOpen);
+        window.addEventListener("pagehide", detectAppOpen);
+
         statusText.innerText = "Opening Sahi...";
-        window.location.href = appDeepLink;
 
-        // If the app didn't open within 2 seconds, redirect to store
+        if (isIOS) {
+          // Use a hidden <a> tag to open the app (Safari requires user interaction)
+          var link = document.createElement("a");
+          link.href = appDeepLink;
+          link.style.display = "none";
+          document.body.appendChild(link);
+          link.click();
+        } else {
+          // Use window.location for Android
+          window.location.href = appDeepLink;
+        }
+
+        // Wait 3s before redirecting to store
         setTimeout(function () {
-          if (!appOpened && new Date().getTime() - now < 2000) {
+          if (!appOpened) {
             statusText.innerText = isIOS
-              ? "Redirecting to AppStore ..."
-              : "Redirecting to PlayStore ...";
+              ? "Redirecting to App Store..."
+              : "Redirecting to Play Store...";
             window.location.replace(isIOS ? appStoreURL : playStoreURL);
           }
-        }, 1500);
+        }, 3000);
       }
 
       openApp();
